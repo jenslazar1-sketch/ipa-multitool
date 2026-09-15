@@ -75,9 +75,9 @@ flag, etc.
 
 | Backend | Used for | Source |
 |---|---|---|
-| [zsign](https://github.com/zhlynn/zsign) | signing / dylib injection | built by CI |
-| [ldid](https://github.com/ProcursusTeam/ldid) | fakesign (jailbroken) | built by CI |
-| [libimobiledevice](https://libimobiledevice.org) | device install / info | install separately |
+| [zsign](https://github.com/zhlynn/zsign) | signing / dylib injection | **built by CI** (bundled in the release) |
+| [ldid](https://github.com/ProcursusTeam/ldid) | fakesign (jailbroken) | optional — drop `ldid.exe` in `bin/` |
+| [libimobiledevice](https://libimobiledevice.org) | device install / info | optional — install separately |
 
 ## Building it yourself (GitHub Actions)
 
