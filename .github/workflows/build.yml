@@ -1,0 +1,102 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write        # needed to publish Releases on tags
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------- 1. ipatool.exe (Python CLI -> single exe) ----------
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build ipatool.exe (PyInstaller)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller -r requirements.txt
+          pyinstaller --onefile --name ipatool -p . --collect-all cryptography run.py
+          if not exist dist\ipatool.exe exit /b 1
+
+      # ---------- 2. zsign.exe (C++ + OpenSSL via MSYS2/mingw) ----------
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-openssl
+            mingw-w64-x86_64-zlib
+
+      - name: Build zsign + collect DLLs
+        shell: msys2 {0}
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/zhlynn/zsign.git zsign-src
+          cd zsign-src
+          # zsign ships a Makefile; build the release binary
+          make -j$(nproc) || make
+          # locate the produced binary (name varies: zsign or zsign.exe, in . or bin/)
+          BIN=$(find . -maxdepth 2 -name 'zsign*.exe' -o -maxdepth 2 -type f -name 'zsign' | head -n1)
+          echo "built: $BIN"
+          mkdir -p ../dist/bin
+          cp "$BIN" ../dist/bin/zsign.exe
+          # copy the mingw runtime DLLs zsign.exe needs so it runs on a clean Windows box
+          for dll in $(ldd ../dist/bin/zsign.exe | awk '/mingw64/ {print $3}'); do
+            cp -u "$dll" ../dist/bin/ || true
+          done
+          ls -la ../dist/bin
+
+      # ---------- 3. ldid.exe (best effort; jailbroken fakesign) ----------
+      - name: Build ldid (optional)
+        continue-on-error: true
+        shell: msys2 {0}
+        run: |
+          set -e
+          pacman -S --noconfirm mingw-w64-x86_64-libplist || true
+          git clone --depth 1 https://github.com/ProcursusTeam/ldid.git ldid-src
+          cd ldid-src
+          make -j$(nproc) LDID_STATIC=1 || make
+          BIN=$(find . -maxdepth 2 -name 'ldid*.exe' -o -maxdepth 2 -type f -name 'ldid' | head -n1)
+          cp "$BIN" ../dist/bin/ldid.exe
+          for dll in $(ldd ../dist/bin/ldid.exe | awk '/mingw64/ {print $3}'); do
+            cp -u "$dll" ../dist/bin/ || true
+          done
+
+      # ---------- 4. assemble + package ----------
+      - name: Assemble release
+        shell: cmd
+        run: |
+          mkdir release
+          copy dist\ipatool.exe release\
+          xcopy /E /I /Y dist\bin release\bin
+          copy README.md release\
+          copy LICENSE release\
+
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path release\* -DestinationPath ipatool-windows-x64.zip -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipatool-windows-x64
+          path: ipatool-windows-x64.zip
+
+      - name: Publish release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ipatool-windows-x64.zip

@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# bundled native binaries (produced by CI, dropped here for local use)
+/bin/*
+!/bin/.gitkeep
+
+# tool output / working files
+/pulled/
+*.ipa
+*.p12
+*.pfx
+*.mobileprovision
+*.pem
+*.cer
