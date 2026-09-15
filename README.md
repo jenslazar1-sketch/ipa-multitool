@@ -15,8 +15,17 @@ dylibs, and install to a USB-connected device.
 ## Install
 
 **Easiest:** grab `ipatool-windows-x64.zip` from the [Releases](../../releases)
-page (built by GitHub Actions — bundles `zsign.exe`, `ldid.exe` and the needed
-DLLs in `bin/`). Unzip and run `ipatool.exe` from a terminal.
+page (built by GitHub Actions — bundles `ipatool.exe`, the animated
+`ipatool-gui.exe`, and `zsign.exe`). Unzip and either double-click
+**`ipatool-gui.exe`** for the GUI, or run `ipatool.exe` from a terminal.
+
+### GUI
+
+`ipatool-gui.exe` is a dark, windowed front-end (no console) with an animated
+**J3NSONTOP** header and four tabs: **Inspect** (certs / profiles / IPAs, with
+provisioned-device UDIDs + full entitlements), **Pull Certs**, **Sign** (swap
+cert / profile / entitlements with file pickers), and **About**. Run from source
+with `python run_gui.py`.
 
 **From source:**
 ```

@@ -14,5 +14,8 @@ dependencies = ["cryptography>=42.0"]
 [project.scripts]
 ipatool = "ipatool.cli:main"
 
+[project.gui-scripts]
+ipatool-gui = "ipatool.gui:main"
+
 [tool.setuptools]
 packages = ["ipatool"]

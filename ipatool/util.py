@@ -3,7 +3,14 @@ from __future__ import annotations
 import subprocess, sys, os, tempfile, shutil, urllib.request, contextlib
 from pathlib import Path
 
-_USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+def _isatty() -> bool:
+    try:
+        return sys.stdout is not None and sys.stdout.isatty()
+    except Exception:
+        return False
+
+
+_USE_COLOR = _isatty() and os.environ.get("NO_COLOR") is None
 
 
 def _c(code: str, s: str) -> str:

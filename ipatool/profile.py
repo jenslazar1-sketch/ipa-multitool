@@ -30,6 +30,15 @@ def developer_cert_ders(prof: dict) -> list[bytes]:
     return [bytes(c) for c in prof.get("DeveloperCertificates", [])]
 
 
+def provisioned_udids(prof: dict) -> list[str]:
+    """UDIDs of devices this (development) profile is provisioned for."""
+    return list(prof.get("ProvisionedDevices", []) or [])
+
+
+def entitlements(prof: dict) -> dict:
+    return prof.get("Entitlements", {}) or {}
+
+
 def _fmt_date(d) -> str:
     if isinstance(d, datetime.datetime):
         return d.strftime("%Y-%m-%d %H:%M UTC")

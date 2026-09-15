@@ -20,13 +20,15 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build ipatool.exe (PyInstaller)
+      - name: Build ipatool.exe + ipatool-gui.exe (PyInstaller)
         shell: cmd
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller -r requirements.txt
           pyinstaller --onefile --name ipatool -p . --collect-all cryptography run.py
           if not exist dist\ipatool.exe exit /b 1
+          pyinstaller --onefile --windowed --name ipatool-gui -p . --collect-all cryptography run_gui.py
+          if not exist dist\ipatool-gui.exe exit /b 1
 
       # ---------- 2. zsign.exe (MSBuild on the bundled VS2022 solution) ----------
       # zsign ships static OpenSSL + /MT static CRT, so the exe is standalone (no DLLs).
@@ -51,6 +53,7 @@ jobs:
         run: |
           mkdir release
           copy dist\ipatool.exe release\
+          copy dist\ipatool-gui.exe release\
           xcopy /E /I /Y dist\bin release\bin
           copy README.md release\
           copy LICENSE release\
